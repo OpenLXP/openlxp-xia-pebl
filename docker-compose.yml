@@ -1,7 +1,7 @@
 version: "3"
 
 services:
-  db_xia_moodle:
+  db_xia_pebl:
     image: mysql:5.7
     ports:
       - '3306:3306'
@@ -13,7 +13,7 @@ services:
     networks:
       - openlxp
 
-  app_xia_moodle:
+  app_xia_pebl:
     build:
       context: .
     ports:
@@ -36,10 +36,9 @@ services:
       AWS_CA_BUNDLE: '/etc/ssl/certs/ca-certificates.pem'
       SECRET_KEY_VAL: "${SECRET_KEY_VAL}"
     volumes:
-      - ./app:/opt/app/openlxp-xia-moodle
-      - C:/Users/kjijo/Documents/dockerRun/cacert.pem:/etc/ssl/certs/ca-certificates.pem
+      - ./app:/opt/app/openlxp-xia-pebl
     depends_on:
-      - db_xia_moodle
+      - db_xia_pebl
     networks:
       - openlxp
 
@@ -51,19 +50,18 @@ services:
   celery:
     build:
       context: .
-    command: celery -A openlxp_xia_moodle_project worker -l info --pool=solo
+    command: celery -A openlxp_xia_pebl_project worker -l info --pool=solo
     volumes:
-      - ./app:/opt/app/openlxp-xia-moodle
-      - C:/Users/kjijo/Documents/dockerRun/cacert.pem:/etc/ssl/certs/ca-certificates.pem
+      - ./app:/opt/app/openlxp-xia-pebl
     environment:
       REQUESTS_CA_BUNDLE: '/etc/ssl/certs/ca-certificates.pem'
       AWS_CA_BUNDLE: '/etc/ssl/certs/ca-certificates.pem'
     env_file:
       - ./.env
     depends_on:
-      - db_xia_moodle
+      - db_xia_pebl
       - redis
-      - app_xia_moodle
+      - app_xia_pebl
     networks:
       - openlxp
     restart: on-failure
@@ -71,19 +69,18 @@ services:
   celery-beat:
     build:
       context: .
-    command: celery -A openlxp_xia_moodle_project beat --scheduler django_celery_beat.schedulers:DatabaseScheduler --loglevel=info --pidfile=/tmp/celerybeat.pid
+    command: celery -A openlxp_xia_pebl_project beat --scheduler django_celery_beat.schedulers:DatabaseScheduler --loglevel=info --pidfile=/tmp/celerybeat.pid
     volumes:
-      - ./app:/opt/app/openlxp-xia-moodle
-      - C:/Users/kjijo/Documents/dockerRun/cacert.pem:/etc/ssl/certs/ca-certificates.pem
+      - ./app:/opt/app/openlxp-xia-pebl
     environment:
       REQUESTS_CA_BUNDLE: '/etc/ssl/certs/ca-certificates.pem'
       AWS_CA_BUNDLE: '/etc/ssl/certs/ca-certificates.pem'
     env_file:
       - ./.env
     depends_on:
-      - db_xia_moodle
+      - db_xia_pebl
       - redis
-      - app_xia_moodle
+      - app_xia_pebl
     networks:
       - openlxp
     restart: on-failure

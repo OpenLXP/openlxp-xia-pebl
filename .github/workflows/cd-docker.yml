@@ -36,13 +36,13 @@ jobs:
         git clone https://openlxp-host:${{ secrets.ACCESS_TOKEN }}@github.com/OpenLXP/openlxp-private.git
         echo "Private repository cloned successfully"
         echo "Copying .env file from openlxp-private to current working directory"
-        cp ./openlxp-private/openlxp-xia-moodle-env/.env .
+        cp ./openlxp-private/openlxp-xia-pebl-env/.env .
         echo "Copied .env file successfully"
         echo "Create openlxp docker network"
         docker network create openlxp
         echo "Docker network successfully created"
         echo "Running coverage unit test"
-        docker-compose --env-file ./.env run app_xia_moodle sh -c "python manage.py waitdb && coverage run manage.py test --tag=unit && flake8 && coverage report && coverage report --fail-under=80"
+        docker-compose --env-file ./.env run app_xia_pebl sh -c "python manage.py waitdb && coverage run manage.py test --tag=unit && flake8 && coverage report && coverage report --fail-under=80"
 # Commenting this step for now. 
 #    - name: Upload Coverage to Codecov
 #      uses: codecov/codecov-action@v1
@@ -68,8 +68,8 @@ jobs:
 #    - name: Docker build
 #      run: |
 #       echo "Start docker build"
-#       docker build . -t openlxp/openlxp-xia-moodle
+#       docker build . -t openlxp/openlxp-xia-pebl
 #    - name: Push Image
 #      run: |
 #       echo "Push new image to the Dockerhub repository"
-#       docker push openlxp/openlxp-xia-moodle
+#       docker push openlxp/openlxp-xia-pebl

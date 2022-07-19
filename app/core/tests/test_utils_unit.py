@@ -55,7 +55,7 @@ class UtilsTests(TestSetUp):
     def test_get_source_metadata_key_value(self, first_value, second_value):
         """Test key dictionary creation for source"""
         test_dict = {
-            'shortname': first_value,
+            'identifier': first_value,
             'SOURCESYSTEM': second_value
         }
 
@@ -73,7 +73,7 @@ class UtilsTests(TestSetUp):
                                                 first_value, second_value):
         """Test key dictionary creation for source"""
         test_dict = {
-            'shortname': first_value,
+            'identifier': first_value,
             'SOURCESYSTEM': second_value
         }
 

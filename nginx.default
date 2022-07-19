@@ -7,7 +7,7 @@ server {
     server_name example.org;
 
     location /static {
-        root /opt/app/openlxp-xia-moodle;
+        root /opt/app/openlxp-xia-pebl;
     }
 
     location / {

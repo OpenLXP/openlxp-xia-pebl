@@ -1,6 +1,7 @@
 import hashlib
 import json
 import logging
+
 import numpy as np
 import pandas as pd
 from django.core.management.base import BaseCommand
@@ -9,9 +10,10 @@ from openlxp_xia.management.utils.xia_internal import (
     convert_date_to_isoformat, get_publisher_detail)
 from openlxp_xia.models import MetadataLedger
 
-from core.management.utils.xsr_client import (get_source_metadata_key_value,
-                                              read_source_file, find_dates,
-                                              find_html)
+from core.management.utils.xsr_client import (find_dates, find_html,
+                                              get_source_metadata_key_value,
+                                              get_uuid_from_source,
+                                              read_source_file)
 
 logger = logging.getLogger('dict_config_logger')
 
@@ -46,7 +48,8 @@ def add_publisher_to_source(source_df):
     return source_df
 
 
-def store_source_metadata(key_value, key_value_hash, hash_value, metadata):
+def store_source_metadata(key_value, key_value_hash, hash_value,
+                          metadata, uuid_from_source):
     """Extract data from Experience Source Repository(XSR)
         and store in metadata ledger
     """
@@ -63,12 +66,25 @@ def store_source_metadata(key_value, key_value_hash, hash_value, metadata):
         record_lifecycle_status='Inactive')
 
     # Retrieving existing records or creating new record to MetadataLedger
-    MetadataLedger.objects.get_or_create(
-        source_metadata_key=key_value,
-        source_metadata_key_hash=key_value_hash,
-        source_metadata=metadata,
-        source_metadata_hash=hash_value,
-        record_lifecycle_status='Active')
+
+    if uuid_from_source and \
+            not MetadataLedger.objects.filter(
+                metadata_record_uuid=uuid_from_source).exists():
+
+        MetadataLedger.objects.get_or_create(
+            metadata_record_uuid=uuid_from_source,
+            source_metadata_key=key_value,
+            source_metadata_key_hash=key_value_hash,
+            source_metadata=metadata,
+            source_metadata_hash=hash_value,
+            record_lifecycle_status='Active')
+    else:
+        MetadataLedger.objects.get_or_create(
+            source_metadata_key=key_value,
+            source_metadata_key_hash=key_value_hash,
+            source_metadata=metadata,
+            source_metadata_hash=hash_value,
+            record_lifecycle_status='Active')
 
 
 def extract_metadata_using_key(source_df):
@@ -82,7 +98,7 @@ def extract_metadata_using_key(source_df):
     logger.info('Getting existing records or creating new record to '
                 'MetadataLedger')
     for temp_key, temp_val in source_data_dict.items():
-
+        uuid_from_source = get_uuid_from_source(temp_val)
         # key dictionary creation function called
         key = \
             get_source_metadata_key_value(source_data_dict[temp_key])
@@ -101,7 +117,7 @@ def extract_metadata_using_key(source_df):
             # Call store function with key, hash of key, hash of metadata,
             # metadata
             store_source_metadata(key['key_value'], key['key_value_hash'],
-                                  hash_value, temp_val_json)
+                                  hash_value, temp_val_json, uuid_from_source)
 
 
 class Command(BaseCommand):

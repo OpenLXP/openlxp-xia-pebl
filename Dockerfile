@@ -14,15 +14,15 @@ RUN chmod a=rwx /etc/debug.log
 # copy source and install dependencies
 RUN mkdir -p /opt/app
 RUN mkdir -p /opt/app/pip_cache
-RUN mkdir -p /opt/app/openlxp-xia-moodle
+RUN mkdir -p /opt/app/openlxp-xia-pebl
 COPY requirements.txt start-server.sh start-app.sh /opt/app/
 RUN chmod +x /opt/app/start-server.sh
 RUN chmod +x /opt/app/start-app.sh
-COPY ./app /opt/app/openlxp-xia-moodle/
+COPY ./app /opt/app/openlxp-xia-pebl/
 WORKDIR /opt/app
-RUN pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host=files.pythonhosted.org -r requirements.txt --cache-dir /opt/app/pip_cache
+RUN pip install -r requirements.txt --cache-dir /opt/app/pip_cache
 RUN chown -R www-data:www-data /opt/app
-WORKDIR /opt/app/openlxp-xia-moodle/
+WORKDIR /opt/app/openlxp-xia-pebl/
 
 # start server
 EXPOSE 8020
