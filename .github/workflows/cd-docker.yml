@@ -28,6 +28,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r ./requirements.txt
 # Start running test scripts and generate the coverage report
+
     - name: Generate Coverage Report
       env:
         GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
@@ -43,33 +44,41 @@ jobs:
         echo "Docker network successfully created"
         echo "Running coverage unit test"
         docker-compose --env-file ./.env run app_xia_pebl sh -c "python manage.py waitdb && coverage run manage.py test --tag=unit && flake8 && coverage report && coverage report --fail-under=80"
-# Commenting this step for now. 
-#    - name: Upload Coverage to Codecov
-#      uses: codecov/codecov-action@v1
-#      with:
-#        fail_ci_if_error: true
-#        path_to_write_report: ./coverage/codecov_report.txt
-        
-#  build:
-#    # requires dependency from step above
-#    needs: code-test
-#    name: Build Docker Image
-#    runs-on: ubuntu-latest
-#    steps:
-#    - name: Checkout Code
-#      uses: actions/checkout@v2
-#    - name: Docker login
-#      env:
-#       DOCKER_USER: ${{ secrets.DOCKER_USER }}
-#       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-#      run: |
-#       echo "Authenticate to Docker"
-#       docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-#    - name: Docker build
-#      run: |
-#       echo "Start docker build"
-#       docker build . -t openlxp/openlxp-xia-pebl
-#    - name: Push Image
-#      run: |
-#       echo "Push new image to the Dockerhub repository"
-#       docker push openlxp/openlxp-xia-pebl
+
+
+  sonar-scan:
+    name: Sonarcloud Scan
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: SonarCloud Scan
+      uses: sonarsource/sonarcloud-github-action@master
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build:
+    # requires dependency from step above
+    needs: code-test
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+    - name: Docker login
+      env:
+       DOCKER_USER: ${{ secrets.DOCKER_USER }}
+       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      run: |
+       echo "Authenticate to Docker"
+       docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+    - name: Docker build
+      run: |
+       echo "Start docker build"
+       docker build . -t openlxp/openlxp-xia-pebl
+    - name: Push Image
+      run: |
+       echo "Push new image to the Dockerhub repository"
+       docker push openlxp/openlxp-xia-pebl
