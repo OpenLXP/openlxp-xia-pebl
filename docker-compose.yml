@@ -28,7 +28,6 @@ services:
       DJANGO_SUPERUSER_USERNAME: "${DJANGO_SUPERUSER_USERNAME}"
       DJANGO_SUPERUSER_PASSWORD: "${DJANGO_SUPERUSER_PASSWORD}"
       DJANGO_SUPERUSER_EMAIL: "${DJANGO_SUPERUSER_EMAIL}"
-      BUCKET_NAME: "${BUCKET_NAME}"
       AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
       AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
       AWS_DEFAULT_REGION: "${AWS_DEFAULT_REGION}"
@@ -85,13 +84,13 @@ services:
       - openlxp
     restart: on-failure
 
-#  flower:
-#    image: mher/flower:0.9.7
-#    command: [ "flower", "--broker=redis://redis:6379/0", "--port=8888" ]
-#    ports:
-#      - 8888:8888
-#    networks:
-#      - openlxp
+  flower:
+    image: mher/flower:0.9.7
+    command: [ "flower", "--broker=redis://redis:6379/0", "--port=8888" ]
+    ports:
+      - 8888:8888
+    networks:
+      - openlxp
 
 networks:
   openlxp:
