@@ -1,0 +1,97 @@
+version: "3"
+
+services:
+  db_xia_pebl:
+    image: mysql:5.7
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_DATABASE: "${DB_NAME}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
+      MYSQL_HOST: ''
+    networks:
+      - openlxp
+
+  app_xia_pebl:
+    build:
+      context: .
+    ports:
+      - "8000:8020"
+    command: >
+      sh -c ". /opt/app/start-app.sh"
+    environment:
+      DB_NAME: "${DB_NAME}"
+      DB_USER: "${DB_USER}"
+      DB_PASSWORD: "${DB_PASSWORD}"
+      DB_HOST: "${DB_HOST}"
+      DJANGO_SUPERUSER_USERNAME: "${DJANGO_SUPERUSER_USERNAME}"
+      DJANGO_SUPERUSER_PASSWORD: "${DJANGO_SUPERUSER_PASSWORD}"
+      DJANGO_SUPERUSER_EMAIL: "${DJANGO_SUPERUSER_EMAIL}"
+      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
+      AWS_DEFAULT_REGION: "${AWS_DEFAULT_REGION}"
+      REQUESTS_CA_BUNDLE: '/etc/ssl/certs/ca-certificates.pem'
+      AWS_CA_BUNDLE: '/etc/ssl/certs/ca-certificates.pem'
+      SECRET_KEY_VAL: "${SECRET_KEY_VAL}"
+    volumes:
+      - ./app:/opt/app/openlxp-xia-pebl
+    depends_on:
+      - db_xia_pebl
+    networks:
+      - openlxp
+
+  redis:
+    image: redis:alpine
+    networks:
+      - openlxp
+
+  celery:
+    build:
+      context: .
+    command: celery -A openlxp_xia_pebl_project worker -l info --pool=solo
+    volumes:
+      - ./app:/opt/app/openlxp-xia-pebl
+    environment:
+      REQUESTS_CA_BUNDLE: '/etc/ssl/certs/ca-certificates.pem'
+      AWS_CA_BUNDLE: '/etc/ssl/certs/ca-certificates.pem'
+    env_file:
+      - ./.env
+    depends_on:
+      - db_xia_pebl
+      - redis
+      - app_xia_pebl
+    networks:
+      - openlxp
+    restart: on-failure
+
+  celery-beat:
+    build:
+      context: .
+    command: celery -A openlxp_xia_pebl_project beat --scheduler django_celery_beat.schedulers:DatabaseScheduler --loglevel=info --pidfile=/tmp/celerybeat.pid
+    volumes:
+      - ./app:/opt/app/openlxp-xia-pebl
+    environment:
+      REQUESTS_CA_BUNDLE: '/etc/ssl/certs/ca-certificates.pem'
+      AWS_CA_BUNDLE: '/etc/ssl/certs/ca-certificates.pem'
+    env_file:
+      - ./.env
+    depends_on:
+      - db_xia_pebl
+      - redis
+      - app_xia_pebl
+    networks:
+      - openlxp
+    restart: on-failure
+
+  flower:
+    image: mher/flower:0.9.7
+    command: [ "flower", "--broker=redis://redis:6379/0", "--port=8888" ]
+    ports:
+      - 8888:8888
+    networks:
+      - openlxp
+
+networks:
+  openlxp:
+    external: true
