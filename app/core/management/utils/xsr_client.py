@@ -41,6 +41,14 @@ def get_xsr_api_response():
     return resp
 
 
+def append_root_url(path):
+    """function to append base url and path"""
+    url = get_xsr_api_endpoint()
+    base_url = url.split("epub_content")[0]
+
+    return base_url + "?epub=" + str(path)
+
+
 def append_url(path):
     """function to append base url and path"""
     url = get_xsr_api_endpoint()
@@ -91,10 +99,11 @@ def extract_source():
 
     for data_dict in resp_json:
         if "rootUrl" in data_dict:
-            data_dict["rootUrl"] = append_url(data_dict["rootUrl"])
+            epub_path = append_url(data_dict["rootUrl"])
+            data_dict["rootUrl"] = append_root_url(data_dict["rootUrl"])
             try:
-                response = requests.get(data_dict["rootUrl"])
-                file_name = "/media/" + data_dict["rootUrl"].split("/")[-1]
+                response = requests.get(epub_path)
+                file_name = "/media/" + epub_path.split("/")[-1]
                 open(file_name, "wb").write(response.content)
                 logger.info(file_name)
                 extracted_data = get_epub_info(file_name)
@@ -143,7 +152,7 @@ def get_uuid_from_source(data_dict):
 def get_source_metadata_key_value(data_dict):
     """Function to create key value for source metadata """
     # field names depend on source data and SOURCESYSTEM is system generated
-    field = ['identifier', 'SOURCESYSTEM']
+    field = ['uniqueId', 'SOURCESYSTEM']
     field_values = []
 
     for item in field:
